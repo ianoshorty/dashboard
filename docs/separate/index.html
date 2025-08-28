@@ -79,6 +79,10 @@
           <i data-lucide="info" class="w-4 h-4"></i>
           About
         </a>
+        <button id="refreshBtn" class="glass px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-white/10 transition-colors">
+          <i data-lucide="refresh-ccw" class="w-4 h-4"></i>
+          Refresh
+        </button>
       </div>
     </div>
   </nav>
@@ -90,10 +94,6 @@
           <span id="liveDateTime" class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-emerald-200 to-amber-200"></span>
         </h1>
         <div class="flex items-center gap-3">
-          <button id="refreshBtn" class="glass card-hover px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2">
-            <i data-lucide="refresh-ccw" class="w-4 h-4"></i>
-            Refresh
-          </button>
           <button id="navToggle" class="md:hidden glass card-hover p-2 rounded-xl" aria-label="Toggle navigation menu">
             <i data-lucide="menu" class="w-5 h-5"></i>
           </button>
@@ -105,12 +105,12 @@
   <main class="max-w-7xl mx-auto px-6 pb-24">
     <!-- Weather + Next Rain Row -->
     <section id="weather" class="mt-10">
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
         <button class="section-toggle flex items-center gap-2 text-xl md:text-2xl font-bold hover:text-slate-200 transition-colors" data-section="weather">
           <i data-lucide="cloud-sun" class="w-5 h-5"></i> Weather & Radar
           <i data-lucide="chevron-down" class="w-5 h-5 ml-2 transition-transform duration-300 section-chevron"></i>
         </button>
-        <span id="weatherUpdated" class="text-xs text-slate-300/70"></span>
+        <span id="weatherUpdated" class="text-xs text-slate-300/70 sm:text-right"></span>
       </div>
       <div class="section-content grid grid-cols-1 gap-6 items-stretch transition-all duration-300 ease-in-out">
         <div class="glass rounded-2xl p-5 md:p-6 card-hover">
@@ -162,12 +162,12 @@
 
     <!-- Reddit Popular Hot 20 -->
     <section id="reddit" class="mt-10">
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
         <button class="section-toggle flex items-center gap-2 text-xl md:text-2xl font-bold hover:text-slate-200 transition-colors" data-section="reddit">
           <i data-lucide="trending-up" class="w-5 h-5"></i> Reddit – Popular Hot 20
           <i data-lucide="chevron-down" class="w-5 h-5 ml-2 transition-transform duration-300 section-chevron"></i>
         </button>
-        <span id="redditUpdated" class="text-xs text-slate-300/70"></span>
+        <span id="redditUpdated" class="text-xs text-slate-300/70 sm:text-right"></span>
       </div>
       <div class="section-content transition-all duration-300 ease-in-out">
         <div id="redditList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
@@ -176,12 +176,12 @@
 
     <!-- WoW Classic Hot 20 -->
     <section id="wow-classic" class="mt-10">
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
         <button class="section-toggle flex items-center gap-2 text-xl md:text-2xl font-bold hover:text-slate-200 transition-colors" data-section="wow-classic">
           <i data-lucide="sword" class="w-5 h-5"></i> WoW Classic – Hot 20
           <i data-lucide="chevron-down" class="w-5 h-5 ml-2 transition-transform duration-300 section-chevron"></i>
         </button>
-        <span id="wowClassicUpdated" class="text-xs text-slate-300/70"></span>
+        <span id="wowClassicUpdated" class="text-xs text-slate-300/70 sm:text-right"></span>
       </div>
       <div class="section-content transition-all duration-300 ease-in-out">
         <div id="wowClassicList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
@@ -190,12 +190,12 @@
 
     <!-- Formula 1 Hot 20 -->
     <section id="formula1" class="mt-10">
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
         <button class="section-toggle flex items-center gap-2 text-xl md:text-2xl font-bold hover:text-slate-200 transition-colors" data-section="formula1">
           <i data-lucide="zap" class="w-5 h-5"></i> Formula 1 – Hot 20
           <i data-lucide="chevron-down" class="w-5 h-5 ml-2 transition-transform duration-300 section-chevron"></i>
         </button>
-        <span id="formula1Updated" class="text-xs text-slate-300/70"></span>
+        <span id="formula1Updated" class="text-xs text-slate-300/70 sm:text-right"></span>
       </div>
       <div class="section-content transition-all duration-300 ease-in-out">
         <div id="formula1List" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
@@ -204,12 +204,12 @@
 
     <!-- BBC Latest 10 -->
     <section id="bbc" class="mt-10">
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
         <button class="section-toggle flex items-center gap-2 text-xl md:text-2xl font-bold hover:text-slate-200 transition-colors" data-section="bbc">
           <i data-lucide="newspaper" class="w-5 h-5"></i> BBC – Latest 10
           <i data-lucide="chevron-down" class="w-5 h-5 ml-2 transition-transform duration-300 section-chevron"></i>
         </button>
-        <span id="bbcUpdated" class="text-xs text-slate-300/70"></span>
+        <span id="bbcUpdated" class="text-xs text-slate-300/70 sm:text-right"></span>
       </div>
       <div class="section-content transition-all duration-300 ease-in-out">
         <div id="bbcList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
@@ -220,12 +220,12 @@
 
     <!-- Read Articles -->
     <section id="read" class="mt-10">
-      <div class="flex items-center justify-between mb-3">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
         <button class="section-toggle flex items-center gap-2 text-xl md:text-2xl font-bold hover:text-slate-200 transition-colors" data-section="read">
           <i data-lucide="check-circle" class="w-5 h-5"></i> Read Articles
           <i data-lucide="chevron-down" class="w-5 h-5 ml-2 transition-transform duration-300 section-chevron"></i>
         </button>
-        <span class="text-xs text-slate-300/70">Recently marked as read</span>
+        <span class="text-xs text-slate-300/70 sm:text-right">Recently marked as read</span>
       </div>
       <div class="section-content space-y-4 transition-all duration-300 ease-in-out">
         <div class="glass rounded-2xl p-4">
@@ -248,7 +248,7 @@
     </section>
 
     <section id="about" class="mt-14 text-slate-300/80">
-      <div class="flex items-center justify-between mb-3">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
         <button class="section-toggle flex items-center gap-2 text-xl md:text-2xl font-bold hover:text-slate-200 transition-colors" data-section="about">
           <i data-lucide="info" class="w-5 h-5"></i> About
           <i data-lucide="chevron-down" class="w-5 h-5 ml-2 transition-transform duration-300 section-chevron"></i>
