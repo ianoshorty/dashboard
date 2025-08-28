@@ -184,10 +184,103 @@ async function loadReddit() {
       <div class="mt-3 h-4 w-1/2 rounded-md skeleton animate-shimmer"></div>
       <div class="mt-3 h-8 w-24 rounded-lg skeleton animate-shimmer"></div>
     </div>`).join(''));
+  
+  // Try multiple approaches to fetch Reddit data
+  let json;
+  let error;
+  
+  // Helper function to fetch with timeout
+  const fetchWithTimeout = async (url, timeoutMs = 10000) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (err) {
+      clearTimeout(timeoutId);
+      throw err;
+    }
+  };
+  
+  // Method 1: Direct Reddit API (may fail due to CORS)
   try {
-    const res = await fetch('https://www.reddit.com/r/popular/hot.json?limit=20');
-    if (!res.ok) throw new Error('Reddit fetch failed');
-    const json = await res.json();
+    const res = await fetchWithTimeout('https://www.reddit.com/r/popular/hot.json?limit=20');
+    if (res.ok) {
+      json = await res.json();
+    } else {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+  } catch (e) {
+    error = e;
+    console.log('Direct Reddit API failed, trying CORS proxy...', e.message);
+  }
+  
+  // Method 2: CORS proxy 1 (allorigins.win)
+  if (!json) {
+    try {
+      const res = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://www.reddit.com/r/popular/hot.json?limit=20')}`);
+      if (res.ok) {
+        json = await res.json();
+        console.log('Used allorigins.win CORS proxy');
+      } else {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+    } catch (e) {
+      error = e;
+      console.log('allorigins.win proxy failed, trying next...', e.message);
+    }
+  }
+  
+  // Method 3: CORS proxy 2 (cors-anywhere)
+  if (!json) {
+    try {
+      const res = await fetchWithTimeout(`https://cors-anywhere.herokuapp.com/https://www.reddit.com/r/popular/hot.json?limit=20`);
+      if (res.ok) {
+        json = await res.json();
+        console.log('Used cors-anywhere proxy');
+      } else {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+    } catch (e) {
+      error = e;
+      console.log('cors-anywhere proxy failed, trying next...', e.message);
+    }
+  }
+  
+  // Method 4: CORS proxy 3 (thingproxy)
+  if (!json) {
+    try {
+      const res = await fetchWithTimeout(`https://thingproxy.freeboard.io/fetch/https://www.reddit.com/r/popular/hot.json?limit=20`);
+      if (res.ok) {
+        json = await res.json();
+        console.log('Used thingproxy proxy');
+      } else {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+    } catch (e) {
+      error = e;
+      console.log('thingproxy failed, all methods exhausted', e.message);
+    }
+  }
+  
+  if (!json) {
+    const errorMessage = error?.message || 'Unknown error';
+    const isCorsError = errorMessage.includes('CORS') || errorMessage.includes('NetworkError') || errorMessage.includes('Failed to fetch');
+    const userMessage = isCorsError 
+      ? 'CORS restrictions or network issues. This is common on mobile browsers and some networks.'
+      : errorMessage;
+    
+    el.innerHTML = `<div class="glass rounded-2xl p-4 text-sm">
+      <div class="font-semibold text-red-300 mb-2">Failed to load Reddit</div>
+      <div class="text-slate-300/80 mb-2">All fetch methods failed. Last error: ${userMessage}</div>
+      <div class="text-xs text-slate-400">This may be due to network restrictions, CORS policies, or Reddit API changes.</div>
+    </div>`;
+    return;
+  }
+  
+  try {
     const items = json.data.children.map(c => c.data);
     document.getElementById('redditUpdated').textContent = `Updated ${new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit'}).format(new Date())}`;
     el.innerHTML = '';
@@ -232,7 +325,12 @@ async function loadReddit() {
         </div>
       `);
     }
-  } catch (e) { el.innerHTML = `<div class="glass rounded-2xl p-4 text-sm">Failed to load Reddit. ${e.message}</div>`; }
+  } catch (e) { 
+    el.innerHTML = `<div class="glass rounded-2xl p-4 text-sm">
+      <div class="font-semibold text-red-300 mb-2">Failed to parse Reddit data</div>
+      <div class="text-slate-300/80">Error: ${e.message}</div>
+    </div>`; 
+  }
 }
 
 // ---------- WoW Classic Hot 20 ----------
@@ -246,10 +344,103 @@ async function loadWowClassic() {
       <div class="mt-3 h-4 w-1/2 rounded-md skeleton animate-shimmer"></div>
       <div class="mt-3 h-8 w-24 rounded-lg skeleton animate-shimmer"></div>
     </div>`).join(''));
+  
+  // Try multiple approaches to fetch Reddit data
+  let json;
+  let error;
+  
+  // Helper function to fetch with timeout
+  const fetchWithTimeout = async (url, timeoutMs = 10000) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (err) {
+      clearTimeout(timeoutId);
+      throw err;
+    }
+  };
+  
+  // Method 1: Direct Reddit API (may fail due to CORS)
   try {
-    const res = await fetch('https://www.reddit.com/r/classicwow/hot.json?limit=20');
-    if (!res.ok) throw new Error('WoW Classic fetch failed');
-    const json = await res.json();
+    const res = await fetchWithTimeout('https://www.reddit.com/r/classicwow/hot.json?limit=20');
+    if (res.ok) {
+      json = await res.json();
+    } else {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+  } catch (e) {
+    error = e;
+    console.log('Direct WoW Classic API failed, trying CORS proxy...', e.message);
+  }
+  
+  // Method 2: CORS proxy 1 (allorigins.win)
+  if (!json) {
+    try {
+      const res = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://www.reddit.com/r/classicwow/hot.json?limit=20')}`);
+      if (res.ok) {
+        json = await res.json();
+        console.log('Used allorigins.win CORS proxy for WoW Classic');
+      } else {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+    } catch (e) {
+      error = e;
+      console.log('allorigins.win proxy failed for WoW Classic, trying next...', e.message);
+    }
+  }
+  
+  // Method 3: CORS proxy 2 (cors-anywhere)
+  if (!json) {
+    try {
+      const res = await fetchWithTimeout(`https://cors-anywhere.herokuapp.com/https://www.reddit.com/r/classicwow/hot.json?limit=20`);
+      if (res.ok) {
+        json = await res.json();
+        console.log('Used cors-anywhere proxy for WoW Classic');
+      } else {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+    } catch (e) {
+      error = e;
+      console.log('cors-anywhere proxy failed for WoW Classic, trying next...', e.message);
+    }
+  }
+  
+  // Method 4: CORS proxy 3 (thingproxy)
+  if (!json) {
+    try {
+      const res = await fetchWithTimeout(`https://thingproxy.freeboard.io/fetch/https://www.reddit.com/r/classicwow/hot.json?limit=20`);
+      if (res.ok) {
+        json = await res.json();
+        console.log('Used thingproxy for WoW Classic');
+      } else {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+    } catch (e) {
+      error = e;
+      console.log('thingproxy failed for WoW Classic, all methods exhausted', e.message);
+    }
+  }
+  
+  if (!json) {
+    const errorMessage = error?.message || 'Unknown error';
+    const isCorsError = errorMessage.includes('CORS') || errorMessage.includes('NetworkError') || errorMessage.includes('Failed to fetch');
+    const userMessage = isCorsError 
+      ? 'CORS restrictions or network issues. This is common on mobile browsers and some networks.'
+      : errorMessage;
+    
+    el.innerHTML = `<div class="glass rounded-2xl p-4 text-sm">
+      <div class="font-semibold text-red-300 mb-2">Failed to load WoW Classic</div>
+      <div class="text-slate-300/80 mb-2">All fetch methods failed. Last error: ${userMessage}</div>
+      <div class="text-xs text-slate-400">This may be due to network restrictions, CORS policies, or Reddit API changes.</div>
+    </div>`;
+    return;
+  }
+  
+  try {
     const items = json.data.children.map(c => c.data);
     document.getElementById('wowClassicUpdated').textContent = `Updated ${new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit'}).format(new Date())}`;
     el.innerHTML = '';
@@ -294,7 +485,12 @@ async function loadWowClassic() {
         </div>
       `);
     }
-  } catch (e) { el.innerHTML = `<div class="glass rounded-2xl p-4 text-sm">Failed to load WoW Classic. ${e.message}</div>`; }
+  } catch (e) { 
+    el.innerHTML = `<div class="glass rounded-2xl p-4 text-sm">
+      <div class="font-semibold text-red-300 mb-2">Failed to parse WoW Classic data</div>
+      <div class="text-slate-300/80">Error: ${e.message}</div>
+    </div>`; 
+  }
 }
 
 // ---------- Formula 1 Hot 20 ----------
@@ -308,10 +504,103 @@ async function loadFormula1() {
       <div class="mt-3 h-4 w-1/2 rounded-md skeleton animate-shimmer"></div>
       <div class="mt-3 h-8 w-24 rounded-lg skeleton animate-shimmer"></div>
     </div>`).join(''));
+  
+  // Try multiple approaches to fetch Reddit data
+  let json;
+  let error;
+  
+  // Helper function to fetch with timeout
+  const fetchWithTimeout = async (url, timeoutMs = 10000) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (err) {
+      clearTimeout(timeoutId);
+      throw err;
+    }
+  };
+  
+  // Method 1: Direct Reddit API (may fail due to CORS)
   try {
-    const res = await fetch('https://www.reddit.com/r/formula1/hot.json?limit=20');
-    if (!res.ok) throw new Error('Formula 1 fetch failed');
-    const json = await res.json();
+    const res = await fetchWithTimeout('https://www.reddit.com/r/formula1/hot.json?limit=20');
+    if (res.ok) {
+      json = await res.json();
+    } else {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+  } catch (e) {
+    error = e;
+    console.log('Direct Formula 1 API failed, trying CORS proxy...', e.message);
+  }
+  
+  // Method 2: CORS proxy 1 (allorigins.win)
+  if (!json) {
+    try {
+      const res = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://www.reddit.com/r/formula1/hot.json?limit=20')}`);
+      if (res.ok) {
+        json = await res.json();
+        console.log('Used allorigins.win CORS proxy for Formula 1');
+      } else {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+    } catch (e) {
+      error = e;
+      console.log('allorigins.win proxy failed for Formula 1, trying next...', e.message);
+    }
+  }
+  
+  // Method 3: CORS proxy 2 (cors-anywhere)
+  if (!json) {
+    try {
+      const res = await fetchWithTimeout(`https://cors-anywhere.herokuapp.com/https://www.reddit.com/r/formula1/hot.json?limit=20`);
+      if (res.ok) {
+        json = await res.json();
+        console.log('Used cors-anywhere proxy for Formula 1');
+      } else {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+    } catch (e) {
+      error = e;
+      console.log('cors-anywhere proxy failed for Formula 1, trying next...', e.message);
+    }
+  }
+  
+  // Method 4: CORS proxy 3 (thingproxy)
+  if (!json) {
+    try {
+      const res = await fetchWithTimeout(`https://thingproxy.freeboard.io/fetch/https://www.reddit.com/r/formula1/hot.json?limit=20`);
+      if (res.ok) {
+        json = await res.json();
+        console.log('Used thingproxy for Formula 1');
+      } else {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+    } catch (e) {
+      error = e;
+      console.log('thingproxy failed for Formula 1, all methods exhausted', e.message);
+    }
+  }
+  
+  if (!json) {
+    const errorMessage = error?.message || 'Unknown error';
+    const isCorsError = errorMessage.includes('CORS') || errorMessage.includes('NetworkError') || errorMessage.includes('Failed to fetch');
+    const userMessage = isCorsError 
+      ? 'CORS restrictions or network issues. This is common on mobile browsers and some networks.'
+      : errorMessage;
+    
+    el.innerHTML = `<div class="glass rounded-2xl p-4 text-sm">
+      <div class="font-semibold text-red-300 mb-2">Failed to load Formula 1</div>
+      <div class="text-slate-300/80 mb-2">All fetch methods failed. Last error: ${userMessage}</div>
+      <div class="text-xs text-slate-400">This may be due to network restrictions, CORS policies, or Reddit API changes.</div>
+    </div>`;
+    return;
+  }
+  
+  try {
     const items = json.data.children.map(c => c.data);
     document.getElementById('formula1Updated').textContent = `Updated ${new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit'}).format(new Date())}`;
     el.innerHTML = '';
@@ -356,7 +645,12 @@ async function loadFormula1() {
         </div>
       `);
     }
-  } catch (e) { el.innerHTML = `<div class="glass rounded-2xl p-4 text-sm">Failed to load Formula 1. ${e.message}</div>`; }
+  } catch (e) { 
+    el.innerHTML = `<div class="glass rounded-2xl p-4 text-sm">
+      <div class="font-semibold text-red-300 mb-2">Failed to parse Formula 1 data</div>
+      <div class="text-slate-300/80">Error: ${e.message}</div>
+    </div>`; 
+  }
 }
 
 // ---------- BBC Latest via RSS (CORS‑friendly reader) ----------
