@@ -391,6 +391,46 @@ function initNavigation() {
   });
 }
 
+// ---------- Collapsible sections ----------
+function initCollapsibleSections() {
+  const sectionToggles = document.querySelectorAll('.section-toggle');
+  
+  sectionToggles.forEach(toggle => {
+    toggle.addEventListener('click', function() {
+      const section = this.getAttribute('data-section');
+      const content = this.closest('section').querySelector('.section-content');
+      const chevron = this.querySelector('.section-chevron');
+      
+      if (content.classList.contains('collapsed')) {
+        // Expand section
+        content.classList.remove('collapsed');
+        chevron.classList.remove('rotated');
+        this.closest('section').classList.remove('section-collapsed');
+        
+        // Remove inline height to let content expand naturally
+        content.style.height = '';
+      } else {
+        // Collapse section
+        // First set the current height to enable smooth transition
+        content.style.height = content.scrollHeight + 'px';
+        
+        // Force a reflow to ensure the height is applied
+        content.offsetHeight;
+        
+        // Now animate to height 0
+        content.style.height = '0px';
+        
+        // Add collapsed class after animation starts
+        setTimeout(() => {
+          content.classList.add('collapsed');
+          chevron.classList.add('rotated');
+          this.closest('section').classList.add('section-collapsed');
+        }, 10);
+      }
+    });
+  });
+}
+
 // ---------- Article read/collapse interactions ----------
 function initArticleInteractions() {
   function handleToggle(e) {
@@ -475,5 +515,6 @@ window.addEventListener('DOMContentLoaded', () => {
   loadAll();
   startLiveDateTime();
   initNavigation();
+  initCollapsibleSections();
   initArticleInteractions();
 });
