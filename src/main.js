@@ -348,16 +348,16 @@ function initNavigation() {
   const navLinks = document.querySelectorAll('.nav-link');
 
   function toggleNav() {
-    const isVisible = !navMenu.classList.contains('-translate-y-full');
+    const isVisible = navMenu.classList.contains('show');
     if (isVisible) {
-      navMenu.classList.add('-translate-y-full', 'opacity-0');
+      navMenu.classList.remove('show');
     } else {
-      navMenu.classList.remove('-translate-y-full', 'opacity-0');
+      navMenu.classList.add('show');
     }
   }
 
   function closeNav() {
-    navMenu.classList.add('-translate-y-full', 'opacity-0');
+    navMenu.classList.remove('show');
   }
 
   function smoothScrollToSection(e) {

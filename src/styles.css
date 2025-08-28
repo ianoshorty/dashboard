@@ -53,7 +53,12 @@ html { scroll-behavior: smooth; }
     right: 0;
     z-index: 1000;
     transform: translateY(-100%);
+    opacity: 0;
     transition: transform 0.3s ease, opacity 0.3s ease;
   }
-  #navMenu.show { transform: translateY(0); }
+  
+  #navMenu.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
