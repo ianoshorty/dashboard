@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title id="pageTitle">North East England – Live Dashboard</title>
+  <meta name="description" content="A single-file, statically-hostable dashboard that fetches data on load: NE England weather (24h), next rain time + 4h radar animation, Top 10 Reddit posts, and Top 10 latest BBC articles." />
+
+  <!-- Tailwind CSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Helvetica', 'Arial', 'Apple Color Emoji', 'Segoe UI Emoji'],
+          },
+          boxShadow: { glow: '0 10px 30px rgba(0,0,0,0.15)' },
+          keyframes: {
+            floaty: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-4px)' } },
+            shimmer: { '0%': { backgroundPosition: '-200% 0' }, '100%': { backgroundPosition: '200% 0' } }
+          },
+          animation: { floaty: 'floaty 6s ease-in-out infinite', shimmer: 'shimmer 2.5s linear infinite' }
+        }
+      }
+    }
+  </script>
+
+  <!-- Inter font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js for weather chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Leaflet for radar map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body class="font-sans text-slate-100 min-h-screen">
+  <!-- Navigation Menu -->
+  <nav id="navMenu" class="sticky top-0 z-50 glass border-b border-white/10 backdrop-blur-lg transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-6 py-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-1 text-sm font-medium">
+          <span class="text-slate-300/70">Jump to:</span>
+        </div>
+        <button id="navClose" class="md:hidden glass p-1.5 rounded-lg" aria-label="Close navigation menu">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="flex flex-wrap items-center gap-2 mt-2">
+        <a href="#weather" class="nav-link glass px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-white/10 transition-colors">
+          <i data-lucide="cloud-sun" class="w-4 h-4"></i>
+          Weather
+        </a>
+        <a href="#radar" class="nav-link glass px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-white/10 transition-colors">
+          <i data-lucide="radar" class="w-4 h-4"></i>
+          Radar
+        </a>
+        <a href="#reddit" class="nav-link glass px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-white/10 transition-colors">
+          <i data-lucide="trending-up" class="w-4 h-4"></i>
+          Reddit Hot
+        </a>
+        <a href="#bbc" class="nav-link glass px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-white/10 transition-colors">
+          <i data-lucide="newspaper" class="w-4 h-4"></i>
+          BBC News
+        </a>
+        <a href="#about" class="nav-link glass px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-white/10 transition-colors">
+          <i data-lucide="info" class="w-4 h-4"></i>
+          About
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="relative">
+    <div class="max-w-7xl mx-auto px-6 pt-10 pb-6">
+      <div class="flex items-center justify-between">
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
+          <span id="liveDateTime" class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-emerald-200 to-amber-200"></span>
+        </h1>
+        <div class="flex items-center gap-3">
+          <button id="refreshBtn" class="glass card-hover px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2">
+            <i data-lucide="refresh-ccw" class="w-4 h-4"></i>
+            Refresh
+          </button>
+          <button id="navToggle" class="md:hidden glass card-hover p-2 rounded-xl" aria-label="Toggle navigation menu">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+      <p class="mt-3 text-slate-300/80 max-w-3xl">Single-file, statically-hostable page. Fetches live data on load: 24‑hour weather for the North East (Newcastle upon Tyne), predicted time of next rain <em>with a live radar</em>, Popular Hot Reddit posts, and the latest BBC headlines.</p>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 pb-24">
+    <!-- Weather + Next Rain Row -->
+    <section id="weather" class="grid grid-cols-1 gap-6 items-stretch">
+      <div class="glass rounded-2xl p-5 md:p-6 card-hover">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl md:text-2xl font-bold flex items-center gap-2"><i data-lucide="cloud-sun" class="w-5 h-5"></i> 24‑Hour Weather (Newcastle upon Tyne)</h2>
+          <span id="weatherUpdated" class="text-xs text-slate-300/70"></span>
+        </div>
+        <div class="relative">
+          <canvas id="weatherChart" height="120" aria-label="24-hour temperature and precipitation probability chart" role="img"></canvas>
+          <div id="weatherSkeleton" class="absolute inset-0 rounded-xl skeleton animate-shimmer"></div>
+        </div>
+        <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+          <div class="glass rounded-xl p-3"><div class="text-slate-300/70">Current Temp</div><div id="currentTemp" class="text-lg font-semibold">—</div></div>
+          <div class="glass rounded-xl p-3"><div class="text-slate-300/70">Now → +24h</div><div id="tempRange" class="text-lg font-semibold">—</div></div>
+          <div class="glass rounded-xl p-3"><div class="text-slate-300/70">Avg Rain Prob</div><div id="avgRain" class="text-lg font-semibold">—</div></div>
+          <div class="glass rounded-xl p-3"><div class="text-slate-300/70">Condition (Now)</div><div id="conditionNow" class="text-lg font-semibold">—</div></div>
+        </div>
+      </div>
+
+      <div class="glass rounded-2xl p-5 md:p-6 card-hover flex flex-col">
+        <h2 class="text-xl md:text-2xl font-bold mb-3 flex items-center gap-2"><i data-lucide="cloud-rain" class="w-5 h-5"></i> Next Rain (Predicted)</h2>
+        <p id="nextRain" class="text-lg md:text-xl font-semibold"></p>
+        <p id="nextRainDetail" class="text-slate-300/80 mt-2 text-sm"></p>
+        <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <div class="glass rounded-xl p-3"><div class="text-slate-300/70">Threshold</div><div class="font-semibold">≥ 50% probability <span class="text-slate-300/60">or</span> ≥ 0.2mm</div></div>
+          <div class="glass rounded-xl p-3"><div class="text-slate-300/70">Source</div><div class="font-semibold">Open‑Meteo (hourly)</div></div>
+        </div>
+        
+        <!-- Radar block -->
+        <div id="radar" class="mt-5">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold flex items-center gap-2"><i data-lucide="radar" class="w-5 h-5"></i> Rain Radar – last 4 hours</h3>
+            <div class="flex items-center gap-2 text-xs">
+              <button id="radarPlay" class="glass ctrl px-3 py-1 rounded-lg">Play</button>
+              <button id="radarPrev" class="glass ctrl px-2 py-1 rounded-lg" title="Prev frame">◀</button>
+              <button id="radarNext" class="glass ctrl px-2 py-1 rounded-lg" title="Next frame">▶</button>
+              <span id="radarTime" class="text-slate-300/80"></span>
+            </div>
+          </div>
+          <div id="radarMap" class="rounded-xl overflow-hidden" style="height: 260px;">
+            <div class="w-full h-full rounded-xl skeleton animate-shimmer"></div>
+          </div>
+          <div class="text-[11px] text-slate-400 mt-2">Radar tiles © RainViewer • Map © OpenStreetMap contributors.</div>
+        </div>
+
+        <div class="mt-auto pt-4 text-xs text-slate-400">Tip: This is a quick heuristic, not a guarantee. Check local forecasts for decisions.</div>
+      </div>
+    </section>
+
+    <!-- Reddit Popular Hot 20 -->
+    <section id="reddit" class="mt-10">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl md:text-2xl font-bold flex items-center gap-2"><i data-lucide="trending-up" class="w-5 h-5"></i> Reddit – Popular Hot 20</h2>
+        <span id="redditUpdated" class="text-xs text-slate-300/70"></span>
+      </div>
+      <div id="redditList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+    </section>
+
+    <!-- BBC Latest 10 -->
+    <section id="bbc" class="mt-10">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl md:text-2xl font-bold flex items-center gap-2"><i data-lucide="newspaper" class="w-5 h-5"></i> BBC – Latest 10</h2>
+        <span id="bbcUpdated" class="text-xs text-slate-300/70"></span>
+      </div>
+      <div id="bbcList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+      <p class="text-xs text-slate-400 mt-2">BBC items fetched from the public RSS feed.</p>
+    </section>
+
+    <section id="about" class="mt-14 text-slate-300/80">
+      <div class="glass rounded-2xl p-6">
+        <h3 class="text-lg font-bold mb-2">About</h3>
+        <p>This page is a single HTML file. It uses public, CORS‑friendly endpoints and requires no keys. Data is fetched client‑side on load for easy static hosting.</p>
+        <ul class="list-disc ml-6 mt-2 text-sm">
+          <li>Weather: <a class="underline decoration-dotted" href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open‑Meteo</a> hourly API for Newcastle upon Tyne.</li>
+          <li>Radar: <a class="underline decoration-dotted" href="https://www.rainviewer.com/api.html" target="_blank" rel="noreferrer">RainViewer Public API</a> tiles animated over Leaflet.</li>
+          <li>Reddit: public JSON (<code>reddit.com/r/popular/hot.json</code>).</li>
+          <li>BBC: public RSS via CORS-friendly services (<code>feeds.bbci.co.uk/news/rss.xml</code> via <code>rss2json.com</code> with <code>allorigins.win</code> fallback).</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="max-w-7xl mx-auto px-6 pb-10 text-slate-400 text-sm">
+    <div class="flex items-center justify-between">
+      <span>Built with ❤️ — No backend required.</span>
+      <a href="#" class="glass px-3 py-1.5 rounded-lg text-xs" onclick="window.scrollTo({top:0,behavior:'smooth'})">Back to top</a>
+    </div>
+  </footer>
+
+  <script src="./main.js"></script>
+</body>
+</html>

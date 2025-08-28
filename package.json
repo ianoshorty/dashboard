@@ -1,0 +1,16 @@
+{
+  "name": "north-east-england-dashboard",
+  "version": "1.0.0",
+  "description": "Dashboard build to output separate assets, single-file, and single-file minified.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "build:separate": "node build.mjs separate",
+    "build:inline": "node build.mjs inline",
+    "build:inline:min": "node build.mjs inline-min"
+  },
+  "devDependencies": {
+    "esbuild": "^0.23.0",
+    "html-minifier-terser": "^7.2.0"
+  }
+}

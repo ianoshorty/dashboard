@@ -1,0 +1,40 @@
+body {
+  background: radial-gradient(1200px 600px at 10% -10%, #c7d2fe40, transparent),
+              radial-gradient(800px 400px at 110% 10%, #fde68a40, transparent),
+              linear-gradient(180deg, #0b1220, #0b1220);
+}
+.glass {
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.card-hover { transition: transform .25s ease, box-shadow .25s ease; }
+.card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
+.skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.12), rgba(255,255,255,0.06)); background-size: 200% 100%; }
+/* Leaflet dark tune */
+.leaflet-container { background: #0b1220; border-radius: 0.75rem; }
+.leaflet-control-attribution { font-size: 10px; }
+.ctrl { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.article-image { transition: opacity 0.3s ease; }
+.article-image:hover { opacity: 0.9; }
+
+/* Navigation styles */
+html { scroll-behavior: smooth; }
+.nav-link { transition: all 0.2s ease; }
+.nav-link:hover { transform: translateY(-1px); }
+.nav-link:active { transform: translateY(0); }
+
+/* Mobile navigation improvements */
+@media (max-width: 767px) {
+  #navMenu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    transform: translateY(-100%);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  #navMenu.show { transform: translateY(0); }
+}
