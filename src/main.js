@@ -215,6 +215,7 @@ async function loadReddit() {
         imageUrl = imageUrl.split('?')[0];
       }
       const collapsed = isRead('reddit', id);
+      if (collapsed) { addToReadList('reddit', { id, title: post.title, href: url }); continue; }
       el.insertAdjacentHTML('beforeend', `
         <div class="article glass rounded-2xl p-4 card-hover${collapsed ? ' collapsed' : ''}" data-source="reddit" data-id="${id}">
           <a class="article-link block" href="${url}" target="_blank" rel="noreferrer">
@@ -265,6 +266,7 @@ async function loadBBC() {
       let thumbnail = art.thumbnail || art.enclosure?.thumbnail || 'https://news.bbcimg.co.uk/nol/shared/img/bbc_news_120x60.gif';
       thumbnail = upgradeBBCImageResolution(thumbnail);
       const collapsed = isRead('bbc', id);
+      if (collapsed) { addToReadList('bbc', { id, title: art.title, href: link }); continue; }
       el.insertAdjacentHTML('beforeend', `
         <div class="article glass rounded-2xl p-4 card-hover${collapsed ? ' collapsed' : ''}" data-source="bbc" data-id="${id}">
           <a class="article-link block" href="${link}" target="_blank" rel="noreferrer">
@@ -305,6 +307,7 @@ async function loadBBC() {
         }
         let thumbnail = upgradeBBCImageResolution(art.thumbnail);
         const collapsed = isRead('bbc', id);
+        if (collapsed) { addToReadList('bbc', { id, title: art.title, href: link }); continue; }
         el.insertAdjacentHTML('beforeend', `
           <div class="article glass rounded-2xl p-4 card-hover${collapsed ? ' collapsed' : ''}" data-source="bbc" data-id="${id}">
             <a class="article-link block" href="${link}" target="_blank" rel="noreferrer">
@@ -394,18 +397,62 @@ function initArticleInteractions() {
     const btn = e.target.closest('.article-toggle');
     if (!btn) return;
     e.preventDefault();
-    e.stopPropagation();
     const article = btn.closest('.article');
     if (!article) return;
     const id = article.getAttribute('data-id');
     const source = article.getAttribute('data-source');
-    const nowCollapsed = !article.classList.contains('collapsed');
-    article.classList.toggle('collapsed', nowCollapsed);
-    btn.textContent = nowCollapsed ? 'Mark unread' : 'Mark read';
-    markRead(source, id, nowCollapsed);
+    const isMarkingRead = !article.classList.contains('collapsed');
+    if (isMarkingRead) {
+      // Mark as read: animate out, then move to read list
+      article.classList.add('collapsed', 'fade-out');
+      markRead(source, id, true);
+      setTimeout(() => {
+        article.remove();
+        addToReadList(source, { id, title: article.querySelector('h3')?.textContent || 'Untitled', href: article.querySelector('a.article-link')?.getAttribute('href') || '#'});
+      }, 200);
+    } else {
+      // Mark as unread: remove from read list and re-render lists (trigger reload of that source)
+      markRead(source, id, false);
+      removeFromReadList(source, id);
+    }
   }
+  
+  function handleMarkUnread(e) {
+    const btn = e.target.closest('.mark-unread');
+    if (!btn) return;
+    const id = btn.getAttribute('data-id');
+    const source = btn.getAttribute('data-source');
+    markRead(source, id, false);
+    removeFromReadList(source, id);
+    // Re-render the main list to show the unmarked item
+    if (source === 'reddit') loadReddit();
+    else if (source === 'bbc') loadBBC();
+  }
+  
   document.getElementById('redditList')?.addEventListener('click', handleToggle);
   document.getElementById('bbcList')?.addEventListener('click', handleToggle);
+  document.getElementById('readRedditList')?.addEventListener('click', handleMarkUnread);
+  document.getElementById('readBbcList')?.addEventListener('click', handleMarkUnread);
+}
+
+function addToReadList(source, item) {
+  const target = source === 'reddit' ? document.getElementById('readRedditList') : document.getElementById('readBbcList');
+  if (!target) return;
+  const li = document.createElement('li');
+  li.dataset.id = item.id;
+  li.className = 'flex items-center justify-between group';
+  li.innerHTML = `
+    <a class="underline decoration-dotted flex-1" href="${item.href}" target="_blank" rel="noreferrer">${item.title.replace(/</g,'&lt;')}</a>
+    <button class="mark-unread glass px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity" data-source="${source}" data-id="${item.id}">Mark unread</button>
+  `;
+  target.prepend(li);
+}
+
+function removeFromReadList(source, id) {
+  const target = source === 'reddit' ? document.getElementById('readRedditList') : document.getElementById('readBbcList');
+  if (!target) return;
+  const el = target.querySelector(`li[data-id="${CSS.escape(id)}"]`);
+  if (el) el.remove();
 }
 
 document.getElementById('refreshBtn')?.addEventListener('click', () => loadAll());

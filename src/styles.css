@@ -23,6 +23,13 @@ body {
 .article { display: flex; flex-direction: column; }
 .article .article-link { margin-bottom: 0.5rem; }
 .article .article-toggle { display: block; width: 100%; text-align: center; padding: 1rem 1rem; font-size: 0.95rem; margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1); }
+
+/* Animate article out when marking read */
+.article.fade-out {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
 .article .article-toggle:active { transform: translateY(0); }
 .article.collapsed {
   opacity: 0.7;
