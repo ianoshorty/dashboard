@@ -2,6 +2,45 @@
 const fmtTime = (iso, tz = 'Europe/London', opts = {}) => new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz, ...opts }).format(new Date(iso));
 const fmtDateTime = (iso, tz = 'Europe/London') => new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz }).format(new Date(iso));
 
+// Safe localStorage helpers with graceful fallback
+const _memoryStore = new Map();
+function storageAvailable() {
+  try {
+    const x = '__dash_test__';
+    window.localStorage.setItem(x, x);
+    window.localStorage.removeItem(x);
+    return true;
+  } catch (_) { return false; }
+}
+const canPersist = storageAvailable();
+function loadReadSet(source) {
+  const key = `read:${source}`;
+  if (canPersist) {
+    try {
+      const raw = window.localStorage.getItem(key);
+      return new Set(raw ? JSON.parse(raw) : []);
+    } catch (_) { /* ignore */ }
+  }
+  return new Set(_memoryStore.get(key) || []);
+}
+function saveReadSet(source, set) {
+  const key = `read:${source}`;
+  const arr = Array.from(set);
+  if (canPersist) {
+    try { window.localStorage.setItem(key, JSON.stringify(arr)); } catch (_) { /* ignore */ }
+  } else {
+    _memoryStore.set(key, arr);
+  }
+}
+function markRead(source, id, isRead) {
+  const set = loadReadSet(source);
+  if (isRead) set.add(id); else set.delete(id);
+  saveReadSet(source, set);
+}
+function isRead(source, id) {
+  return loadReadSet(source).has(id);
+}
+
 // Update page heading with live date and time
 function updateLiveDateTime() {
   const now = new Date();
@@ -154,6 +193,7 @@ async function loadReddit() {
     el.innerHTML = '';
     for (const post of items) {
       const url = `https://www.reddit.com${post.permalink}`;
+      const id = post.id || post.permalink;
       const flair = post.link_flair_text ? `<span class='ml-2 text-xs px-1.5 py-0.5 rounded-md bg-white/10 border border-white/10'>${post.link_flair_text}</span>` : '';
       let imageUrl = null;
       let imageAlt = post.title;
@@ -174,17 +214,21 @@ async function loadReddit() {
       if (imageUrl && imageUrl.includes('reddit.com')) {
         imageUrl = imageUrl.split('?')[0];
       }
+      const collapsed = isRead('reddit', id);
       el.insertAdjacentHTML('beforeend', `
-        <a class="glass rounded-2xl p-4 block card-hover" href="${url}" target="_blank" rel="noreferrer">
-          ${imageUrl ? `
-            <div class="h-32 w-full rounded-lg overflow-hidden mb-3 bg-slate-800/50">
-              <img src="${imageUrl}" alt="${post.title}" class="w-full h-full object-cover article-image" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('bg-slate-800/50');">
-            </div>
-          ` : ''}
-          <div class="text-sm text-slate-300/70">r/${post.subreddit} • ⬆︎ ${post.ups.toLocaleString('en-GB')}</div>
-          <h3 class="mt-1 font-semibold leading-snug">${post.title.replace(/</g,'&lt;')}</h3>
-          <div class="mt-3 inline-flex items-center text-xs text-slate-300/80">by u/${post.author}${flair}</div>
-        </a>
+        <div class="article glass rounded-2xl p-4 card-hover${collapsed ? ' collapsed' : ''}" data-source="reddit" data-id="${id}">
+          <a class="article-link block" href="${url}" target="_blank" rel="noreferrer">
+            ${imageUrl ? `
+              <div class="h-32 w-full rounded-lg overflow-hidden mb-3 bg-slate-800/50">
+                <img src="${imageUrl}" alt="${post.title}" class="w-full h-full object-cover article-image" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('bg-slate-800/50');">
+              </div>
+            ` : ''}
+            <div class="text-sm text-slate-300/70 article-meta">r/${post.subreddit} • ⬆︎ ${post.ups.toLocaleString('en-GB')}</div>
+            <h3 class="mt-1 font-semibold leading-snug">${post.title.replace(/</g,'&lt;')}</h3>
+            <div class="mt-3 inline-flex items-center text-xs text-slate-300/80 article-meta">by u/${post.author}${flair}</div>
+          </a>
+          <button class="article-toggle glass px-2 py-1 rounded-md text-xs" type="button" aria-label="Toggle read">${collapsed ? 'Mark unread' : 'Mark read'}</button>
+        </div>
       `);
     }
   } catch (e) { el.innerHTML = `<div class="glass rounded-2xl p-4 text-sm">Failed to load Reddit. ${e.message}</div>`; }
@@ -214,19 +258,24 @@ async function loadBBC() {
       const t = new Date(art.pubDate);
       const when = isNaN(t) ? '' : new Intl.DateTimeFormat('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }).format(t);
       let link = art.link;
+      const id = link || art.guid || art.title;
       if (link.includes('bbc.com')) {
         link = link.replace('bbc.com', 'bbc.co.uk');
       }
       let thumbnail = art.thumbnail || art.enclosure?.thumbnail || 'https://news.bbcimg.co.uk/nol/shared/img/bbc_news_120x60.gif';
       thumbnail = upgradeBBCImageResolution(thumbnail);
+      const collapsed = isRead('bbc', id);
       el.insertAdjacentHTML('beforeend', `
-        <a class="glass rounded-2xl p-4 block card-hover" href="${link}" target="_blank" rel="noreferrer">
-          <div class="h-32 w-full rounded-lg overflow-hidden mb-3 bg-slate-800/50">
-            <img src="${thumbnail}" alt="${art.title}" class="w-full h-full object-cover article-image" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('bg-slate-800/50');">
-          </div>
-          <div class="text-sm text-slate-300/70">${when}</div>
-          <h3 class="mt-1 font-semibold leading-snug">${art.title.replace(/</g,'&lt;')}</h3>
-        </a>
+        <div class="article glass rounded-2xl p-4 card-hover${collapsed ? ' collapsed' : ''}" data-source="bbc" data-id="${id}">
+          <a class="article-link block" href="${link}" target="_blank" rel="noreferrer">
+            <div class="h-32 w-full rounded-lg overflow-hidden mb-3 bg-slate-800/50">
+              <img src="${thumbnail}" alt="${art.title}" class="w-full h-full object-cover article-image" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('bg-slate-800/50');">
+            </div>
+            <div class="text-sm text-slate-300/70 article-meta">${when}</div>
+            <h3 class="mt-1 font-semibold leading-snug">${art.title.replace(/</g,'&lt;')}</h3>
+          </a>
+          <button class="article-toggle glass px-2 py-1 rounded-md text-xs" type="button" aria-label="Toggle read">${collapsed ? 'Mark unread' : 'Mark read'}</button>
+        </div>
       `);
     }
   } catch (e) {
@@ -250,18 +299,23 @@ async function loadBBC() {
         const t = new Date(art.pubDate);
         const when = isNaN(t) ? '' : new Intl.DateTimeFormat('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }).format(t);
         let link = art.link;
+        const id = link || art.guid || art.title;
         if (link.includes('bbc.com')) {
           link = link.replace('bbc.com', 'bbc.co.uk');
         }
         let thumbnail = upgradeBBCImageResolution(art.thumbnail);
+        const collapsed = isRead('bbc', id);
         el.insertAdjacentHTML('beforeend', `
-          <a class="glass rounded-2xl p-4 block card-hover" href="${link}" target="_blank" rel="noreferrer">
-            <div class="h-32 w-full rounded-lg overflow-hidden mb-3 bg-slate-800/50">
-              <img src="${thumbnail}" alt="${art.title}" class="w-full h-full object-cover article-image" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('bg-slate-800/50');">
-            </div>
-            <div class="text-sm text-slate-300/70">${when}</div>
-            <h3 class="mt-1 font-semibold leading-snug">${art.title.replace(/</g,'&lt;')}</h3>
-          </a>
+          <div class="article glass rounded-2xl p-4 card-hover${collapsed ? ' collapsed' : ''}" data-source="bbc" data-id="${id}">
+            <a class="article-link block" href="${link}" target="_blank" rel="noreferrer">
+              <div class="h-32 w-full rounded-lg overflow-hidden mb-3 bg-slate-800/50">
+                <img src="${thumbnail}" alt="${art.title}" class="w-full h-full object-cover article-image" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('bg-slate-800/50');">
+              </div>
+              <div class="text-sm text-slate-300/70 article-meta">${when}</div>
+              <h3 class="mt-1 font-semibold leading-snug">${art.title.replace(/</g,'&lt;')}</h3>
+            </a>
+            <button class="article-toggle glass px-2 py-1 rounded-md text-xs" type="button" aria-label="Toggle read">${collapsed ? 'Mark unread' : 'Mark read'}</button>
+          </div>
         `);
       }
     } catch (fallbackError) {
@@ -334,9 +388,30 @@ function initNavigation() {
   });
 }
 
+// ---------- Article read/collapse interactions ----------
+function initArticleInteractions() {
+  function handleToggle(e) {
+    const btn = e.target.closest('.article-toggle');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const article = btn.closest('.article');
+    if (!article) return;
+    const id = article.getAttribute('data-id');
+    const source = article.getAttribute('data-source');
+    const nowCollapsed = !article.classList.contains('collapsed');
+    article.classList.toggle('collapsed', nowCollapsed);
+    btn.textContent = nowCollapsed ? 'Mark unread' : 'Mark read';
+    markRead(source, id, nowCollapsed);
+  }
+  document.getElementById('redditList')?.addEventListener('click', handleToggle);
+  document.getElementById('bbcList')?.addEventListener('click', handleToggle);
+}
+
 document.getElementById('refreshBtn')?.addEventListener('click', () => loadAll());
 window.addEventListener('DOMContentLoaded', () => {
   loadAll();
   startLiveDateTime();
   initNavigation();
+  initArticleInteractions();
 });
