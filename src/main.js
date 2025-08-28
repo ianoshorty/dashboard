@@ -217,7 +217,7 @@ async function loadReddit() {
       const collapsed = isRead('reddit', id);
       if (collapsed) { addToReadList('reddit', { id, title: post.title, href: url }); continue; }
       el.insertAdjacentHTML('beforeend', `
-        <div class="article glass rounded-2xl p-4 card-hover${collapsed ? ' collapsed' : ''}" data-source="reddit" data-id="${id}">
+        <div class="article glass rounded-2xl p-4 card-hover${collapsed ? ' collapsed' : ''}" data-source="reddit" data-id="${id}" data-url="${url}">
           <a class="article-link block" href="${url}" target="_blank" rel="noreferrer">
             ${imageUrl ? `
               <div class="h-32 w-full rounded-lg overflow-hidden mb-3 bg-slate-800/50">
@@ -268,7 +268,7 @@ async function loadBBC() {
       const collapsed = isRead('bbc', id);
       if (collapsed) { addToReadList('bbc', { id, title: art.title, href: link }); continue; }
       el.insertAdjacentHTML('beforeend', `
-        <div class="article glass rounded-2xl p-4 card-hover${collapsed ? ' collapsed' : ''}" data-source="bbc" data-id="${id}">
+        <div class="article glass rounded-2xl p-4 card-hover${collapsed ? ' collapsed' : ''}" data-source="bbc" data-id="${id}" data-url="${link}">
           <a class="article-link block" href="${link}" target="_blank" rel="noreferrer">
             <div class="h-32 w-full rounded-lg overflow-hidden mb-3 bg-slate-800/50">
               <img src="${thumbnail}" alt="${art.title}" class="w-full h-full object-cover article-image" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('bg-slate-800/50');">
@@ -309,7 +309,7 @@ async function loadBBC() {
         const collapsed = isRead('bbc', id);
         if (collapsed) { addToReadList('bbc', { id, title: art.title, href: link }); continue; }
         el.insertAdjacentHTML('beforeend', `
-          <div class="article glass rounded-2xl p-4 card-hover${collapsed ? ' collapsed' : ''}" data-source="bbc" data-id="${id}">
+          <div class="article glass rounded-2xl p-4 card-hover${collapsed ? ' collapsed' : ''}" data-source="bbc" data-id="${id}" data-url="${link}">
             <a class="article-link block" href="${link}" target="_blank" rel="noreferrer">
               <div class="h-32 w-full rounded-lg overflow-hidden mb-3 bg-slate-800/50">
                 <img src="${thumbnail}" alt="${art.title}" class="w-full h-full object-cover article-image" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('bg-slate-800/50');">
@@ -417,6 +417,19 @@ function initArticleInteractions() {
     }
   }
   
+  function handleCardClick(e) {
+    // Don't trigger if clicking on the toggle button
+    if (e.target.closest('.article-toggle')) return;
+    
+    const article = e.target.closest('.article');
+    if (!article) return;
+    
+    const url = article.getAttribute('data-url');
+    if (url && url !== '#') {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  }
+  
   function handleMarkUnread(e) {
     const btn = e.target.closest('.mark-unread');
     if (!btn) return;
@@ -430,7 +443,9 @@ function initArticleInteractions() {
   }
   
   document.getElementById('redditList')?.addEventListener('click', handleToggle);
+  document.getElementById('redditList')?.addEventListener('click', handleCardClick);
   document.getElementById('bbcList')?.addEventListener('click', handleToggle);
+  document.getElementById('bbcList')?.addEventListener('click', handleCardClick);
   document.getElementById('readRedditList')?.addEventListener('click', handleMarkUnread);
   document.getElementById('readBbcList')?.addEventListener('click', handleMarkUnread);
 }
