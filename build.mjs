@@ -12,7 +12,7 @@ const srcDir = resolve(root, 'src');
 const variants = ['separate', 'inline', 'inline-min'];
 const mode = process.argv[2] && variants.includes(process.argv[2]) ? process.argv[2] : 'separate';
 
-const distDir = resolve(root, 'dist');
+const distDir = resolve(root, 'docs');
 const outDir = {
   'separate': resolve(distDir, 'separate'),
   'inline': resolve(distDir, 'inline'),
