@@ -63,6 +63,14 @@
           <i data-lucide="trending-up" class="w-4 h-4"></i>
           Reddit Hot
         </a>
+        <a href="#wow-classic" class="nav-link glass px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-white/10 transition-colors">
+          <i data-lucide="sword" class="w-4 h-4"></i>
+          WoW Classic
+        </a>
+        <a href="#formula1" class="nav-link glass px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-white/10 transition-colors">
+          <i data-lucide="zap" class="w-4 h-4"></i>
+          Formula 1
+        </a>
         <a href="#bbc" class="nav-link glass px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-white/10 transition-colors">
           <i data-lucide="newspaper" class="w-4 h-4"></i>
           BBC News
@@ -166,6 +174,34 @@
       </div>
     </section>
 
+    <!-- WoW Classic Hot 20 -->
+    <section id="wow-classic" class="mt-10">
+      <div class="flex items-center justify-between mb-4">
+        <button class="section-toggle flex items-center gap-2 text-xl md:text-2xl font-bold hover:text-slate-200 transition-colors" data-section="wow-classic">
+          <i data-lucide="sword" class="w-5 h-5"></i> WoW Classic – Hot 20
+          <i data-lucide="chevron-down" class="w-5 h-5 ml-2 transition-transform duration-300 section-chevron"></i>
+        </button>
+        <span id="wowClassicUpdated" class="text-xs text-slate-300/70"></span>
+      </div>
+      <div class="section-content transition-all duration-300 ease-in-out">
+        <div id="wowClassicList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+      </div>
+    </section>
+
+    <!-- Formula 1 Hot 20 -->
+    <section id="formula1" class="mt-10">
+      <div class="flex items-center justify-between mb-4">
+        <button class="section-toggle flex items-center gap-2 text-xl md:text-2xl font-bold hover:text-slate-200 transition-colors" data-section="formula1">
+          <i data-lucide="zap" class="w-5 h-5"></i> Formula 1 – Hot 20
+          <i data-lucide="chevron-down" class="w-5 h-5 ml-2 transition-transform duration-300 section-chevron"></i>
+        </button>
+        <span id="formula1Updated" class="text-xs text-slate-300/70"></span>
+      </div>
+      <div class="section-content transition-all duration-300 ease-in-out">
+        <div id="formula1List" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+      </div>
+    </section>
+
     <!-- BBC Latest 10 -->
     <section id="bbc" class="mt-10">
       <div class="flex items-center justify-between mb-4">
@@ -196,6 +232,14 @@
           <ul id="readRedditList" class="space-y-2 text-sm"></ul>
         </div>
         <div class="glass rounded-2xl p-4">
+          <h3 class="text-sm font-semibold mb-3 flex items-center gap-2"><i data-lucide="sword" class="w-4 h-4"></i> WoW Classic</h3>
+          <ul id="readWowClassicList" class="space-y-2 text-sm"></ul>
+        </div>
+        <div class="glass rounded-2xl p-4">
+          <h3 class="text-sm font-semibold mb-3 flex items-center gap-2"><i data-lucide="zap" class="w-4 h-4"></i> Formula 1</h3>
+          <ul id="readFormula1List" class="space-y-2 text-sm"></ul>
+        </div>
+        <div class="glass rounded-2xl p-4">
           <h3 class="text-sm font-semibold mb-3 flex items-center gap-2"><i data-lucide="newspaper" class="w-4 h-4"></i> BBC</h3>
           <ul id="readBbcList" class="space-y-2 text-sm"></ul>
         </div>
@@ -217,6 +261,8 @@
             <li>Weather: <a class="underline decoration-dotted" href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open‑Meteo</a> hourly API for Newcastle upon Tyne.</li>
             <li>Radar: <a class="underline decoration-dotted" href="https://www.rainviewer.com/api.html" target="_blank" rel="noreferrer">RainViewer Public API</a> tiles animated over Leaflet.</li>
             <li>Reddit: public JSON (<code>reddit.com/r/popular/hot.json</code>).</li>
+            <li>WoW Classic: public JSON (<code>reddit.com/r/classicwow/hot.json</code>).</li>
+            <li>Formula 1: public JSON (<code>reddit.com/r/formula1/hot.json</code>).</li>
             <li>BBC: public RSS via CORS-friendly services (<code>feeds.bbci.co.uk/news/rss.xml</code> via <code>rss2json.com</code> with <code>allorigins.win</code> fallback).</li>
           </ul>
         </div>

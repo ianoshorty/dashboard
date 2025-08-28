@@ -224,7 +224,7 @@ async function loadReddit() {
                 <img src="${imageUrl}" alt="${post.title}" class="w-full h-full object-cover article-image" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('bg-slate-800/50');">
               </div>
             ` : ''}
-            <div class="text-sm text-slate-300/70 article-meta">r/${post.subreddit} • ⬆︎ ${post.ups.toLocaleString('en-GB')}</div>
+            <div class="text-sm text-slate-300/70 article-meta">r/${post.subreddit} • ⬆︎ ${post.ups.toLocaleString('en-GB')} • ${new Intl.DateTimeFormat('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }).format(new Date(post.created_utc * 1000))}</div>
             <h3 class="mt-1 font-semibold leading-snug">${post.title.replace(/</g,'&lt;')}</h3>
             <div class="mt-3 inline-flex items-center text-xs text-slate-300/80 article-meta">by u/${post.author}${flair}</div>
           </a>
@@ -233,6 +233,130 @@ async function loadReddit() {
       `);
     }
   } catch (e) { el.innerHTML = `<div class="glass rounded-2xl p-4 text-sm">Failed to load Reddit. ${e.message}</div>`; }
+}
+
+// ---------- WoW Classic Hot 20 ----------
+async function loadWowClassic() {
+  const el = document.getElementById('wowClassicList');
+  el.innerHTML = '';
+  el.insertAdjacentHTML('beforeend', Array.from({length: 8}).map(() => `
+    <div class="glass rounded-2xl p-4 card-hover">
+      <div class="h-32 w-full rounded-lg skeleton animate-shimmer mb-3"></div>
+      <div class="h-5 w-3/4 rounded-md skeleton animate-shimmer"></div>
+      <div class="mt-3 h-4 w-1/2 rounded-md skeleton animate-shimmer"></div>
+      <div class="mt-3 h-8 w-24 rounded-lg skeleton animate-shimmer"></div>
+    </div>`).join(''));
+  try {
+    const res = await fetch('https://www.reddit.com/r/classicwow/hot.json?limit=20');
+    if (!res.ok) throw new Error('WoW Classic fetch failed');
+    const json = await res.json();
+    const items = json.data.children.map(c => c.data);
+    document.getElementById('wowClassicUpdated').textContent = `Updated ${new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit'}).format(new Date())}`;
+    el.innerHTML = '';
+    for (const post of items) {
+      const url = `https://www.reddit.com${post.permalink}`;
+      const id = post.id || post.permalink;
+      const flair = post.link_flair_text ? `<span class='ml-2 text-xs px-1.5 py-0.5 rounded-md bg-white/10 border border-white/10'>${post.link_flair_text}</span>` : '';
+      let imageUrl = null;
+      let imageAlt = post.title;
+      if (post.preview && post.preview.images && post.preview.images.length > 0) {
+        const preview = post.preview.images[0];
+        if (preview.variants && preview.variants.gif) {
+          imageUrl = preview.variants.gif.source.url;
+        } else if (preview.variants && preview.variants.mp4) {
+          imageUrl = preview.source.url;
+        } else {
+          imageUrl = preview.source.url;
+        }
+      } else if (post.thumbnail && post.thumbnail !== 'self' && post.thumbnail !== 'default' && post.thumbnail !== 'nsfw') {
+        imageUrl = post.thumbnail;
+      } else if (post.url && (post.url.includes('.jpg') || post.url.includes('.jpeg') || post.url.includes('.png') || post.url.includes('.gif'))) {
+        imageUrl = post.url;
+      }
+      if (imageUrl && imageUrl.includes('reddit.com')) {
+        imageUrl = imageUrl.split('?')[0];
+      }
+      const collapsed = isRead('wow-classic', id);
+      if (collapsed) { addToReadList('wow-classic', { id, title: post.title, href: url }); continue; }
+      el.insertAdjacentHTML('beforeend', `
+        <div class="article glass rounded-2xl p-4 card-hover${collapsed ? ' collapsed' : ''}" data-source="wow-classic" data-id="${id}" data-url="${url}">
+          <a class="article-link block" href="${url}" target="_blank" rel="noreferrer">
+            ${imageUrl ? `
+              <div class="h-32 w-full rounded-lg overflow-hidden mb-3 bg-slate-800/50">
+                <img src="${imageUrl}" alt="${post.title}" class="w-full h-full object-cover article-image" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('bg-slate-800/50');">
+              </div>
+            ` : ''}
+            <div class="text-sm text-slate-300/70 article-meta">r/classicwow • ⬆︎ ${post.ups.toLocaleString('en-GB')} • ${new Intl.DateTimeFormat('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }).format(new Date(post.created_utc * 1000))}</div>
+            <h3 class="mt-1 font-semibold leading-snug">${post.title.replace(/</g,'&lt;')}</h3>
+            <div class="mt-3 inline-flex items-center text-xs text-slate-300/80 article-meta">by u/${post.author}${flair}</div>
+          </a>
+          <button class="article-toggle glass px-2 py-1 rounded-md text-xs" type="button" aria-label="Toggle read">${collapsed ? 'Mark unread' : 'Mark read'}</button>
+        </div>
+      `);
+    }
+  } catch (e) { el.innerHTML = `<div class="glass rounded-2xl p-4 text-sm">Failed to load WoW Classic. ${e.message}</div>`; }
+}
+
+// ---------- Formula 1 Hot 20 ----------
+async function loadFormula1() {
+  const el = document.getElementById('formula1List');
+  el.innerHTML = '';
+  el.insertAdjacentHTML('beforeend', Array.from({length: 8}).map(() => `
+    <div class="glass rounded-2xl p-4 card-hover">
+      <div class="h-32 w-full rounded-lg skeleton animate-shimmer mb-3"></div>
+      <div class="h-5 w-3/4 rounded-md skeleton animate-shimmer"></div>
+      <div class="mt-3 h-4 w-1/2 rounded-md skeleton animate-shimmer"></div>
+      <div class="mt-3 h-8 w-24 rounded-lg skeleton animate-shimmer"></div>
+    </div>`).join(''));
+  try {
+    const res = await fetch('https://www.reddit.com/r/formula1/hot.json?limit=20');
+    if (!res.ok) throw new Error('Formula 1 fetch failed');
+    const json = await res.json();
+    const items = json.data.children.map(c => c.data);
+    document.getElementById('formula1Updated').textContent = `Updated ${new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit'}).format(new Date())}`;
+    el.innerHTML = '';
+    for (const post of items) {
+      const url = `https://www.reddit.com${post.permalink}`;
+      const id = post.id || post.permalink;
+      const flair = post.link_flair_text ? `<span class='ml-2 text-xs px-1.5 py-0.5 rounded-md bg-white/10 border border-white/10'>${post.link_flair_text}</span>` : '';
+      let imageUrl = null;
+      let imageAlt = post.title;
+      if (post.preview && post.preview.images && post.preview.images.length > 0) {
+        const preview = post.preview.images[0];
+        if (preview.variants && preview.variants.gif) {
+          imageUrl = preview.variants.gif.source.url;
+        } else if (preview.variants && preview.variants.mp4) {
+          imageUrl = preview.source.url;
+        } else {
+          imageUrl = preview.source.url;
+        }
+      } else if (post.thumbnail && post.thumbnail !== 'self' && post.thumbnail !== 'default' && post.thumbnail !== 'nsfw') {
+        imageUrl = post.thumbnail;
+      } else if (post.url && (post.url.includes('.jpg') || post.url.includes('.jpeg') || post.url.includes('.png') || post.url.includes('.gif'))) {
+        imageUrl = post.url;
+      }
+      if (imageUrl && imageUrl.includes('reddit.com')) {
+        imageUrl = imageUrl.split('?')[0];
+      }
+      const collapsed = isRead('formula1', id);
+      if (collapsed) { addToReadList('formula1', { id, title: post.title, href: url }); continue; }
+      el.insertAdjacentHTML('beforeend', `
+        <div class="article glass rounded-2xl p-4 card-hover${collapsed ? ' collapsed' : ''}" data-source="formula1" data-id="${id}" data-url="${url}">
+          <a class="article-link block" href="${url}" target="_blank" rel="noreferrer">
+            ${imageUrl ? `
+              <div class="h-32 w-full rounded-lg overflow-hidden mb-3 bg-slate-800/50">
+                <img src="${imageUrl}" alt="${post.title}" class="w-full h-full object-cover article-image" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('bg-slate-800/50');">
+              </div>
+            ` : ''}
+            <div class="text-sm text-slate-300/70 article-meta">r/formula1 • ⬆︎ ${post.ups.toLocaleString('en-GB')} • ${new Intl.DateTimeFormat('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }).format(new Date(post.created_utc * 1000))}</div>
+            <h3 class="mt-1 font-semibold leading-snug">${post.title.replace(/</g,'&lt;')}</h3>
+            <div class="mt-3 inline-flex items-center text-xs text-slate-300/80 article-meta">by u/${post.author}${flair}</div>
+          </a>
+          <button class="article-toggle glass px-2 py-1 rounded-md text-xs" type="button" aria-label="Toggle read">${collapsed ? 'Mark unread' : 'Mark read'}</button>
+        </div>
+      `);
+    }
+  } catch (e) { el.innerHTML = `<div class="glass rounded-2xl p-4 text-sm">Failed to load Formula 1. ${e.message}</div>`; }
 }
 
 // ---------- BBC Latest via RSS (CORS‑friendly reader) ----------
@@ -330,7 +454,7 @@ async function loadBBC() {
 // ---------- Orchestrate ----------
 async function loadAll() {
   document.body.classList.add('loading');
-  await Promise.allSettled([loadWeather(), initRadar(), loadReddit(), loadBBC()]);
+  await Promise.allSettled([loadWeather(), initRadar(), loadReddit(), loadWowClassic(), loadFormula1(), loadBBC()]);
   document.body.classList.remove('loading');
   if (window.lucide) lucide.createIcons();
 }
@@ -479,19 +603,36 @@ function initArticleInteractions() {
     removeFromReadList(source, id);
     // Re-render the main list to show the unmarked item
     if (source === 'reddit') loadReddit();
+    else if (source === 'wow-classic') loadWowClassic();
+    else if (source === 'formula1') loadFormula1();
     else if (source === 'bbc') loadBBC();
   }
   
   document.getElementById('redditList')?.addEventListener('click', handleToggle);
   document.getElementById('redditList')?.addEventListener('click', handleCardClick);
+  document.getElementById('wowClassicList')?.addEventListener('click', handleToggle);
+  document.getElementById('wowClassicList')?.addEventListener('click', handleCardClick);
+  document.getElementById('formula1List')?.addEventListener('click', handleToggle);
+  document.getElementById('formula1List')?.addEventListener('click', handleCardClick);
   document.getElementById('bbcList')?.addEventListener('click', handleToggle);
   document.getElementById('bbcList')?.addEventListener('click', handleCardClick);
   document.getElementById('readRedditList')?.addEventListener('click', handleMarkUnread);
+  document.getElementById('readWowClassicList')?.addEventListener('click', handleMarkUnread);
+  document.getElementById('readFormula1List')?.addEventListener('click', handleMarkUnread);
   document.getElementById('readBbcList')?.addEventListener('click', handleMarkUnread);
 }
 
 function addToReadList(source, item) {
-  const target = source === 'reddit' ? document.getElementById('readRedditList') : document.getElementById('readBbcList');
+  let target;
+  if (source === 'reddit') {
+    target = document.getElementById('readRedditList');
+  } else if (source === 'wow-classic') {
+    target = document.getElementById('readWowClassicList');
+  } else if (source === 'formula1') {
+    target = document.getElementById('readFormula1List');
+  } else if (source === 'bbc') {
+    target = document.getElementById('readBbcList');
+  }
   if (!target) return;
   const li = document.createElement('li');
   li.dataset.id = item.id;
@@ -504,7 +645,16 @@ function addToReadList(source, item) {
 }
 
 function removeFromReadList(source, id) {
-  const target = source === 'reddit' ? document.getElementById('readRedditList') : document.getElementById('readBbcList');
+  let target;
+  if (source === 'reddit') {
+    target = document.getElementById('readRedditList');
+  } else if (source === 'wow-classic') {
+    target = document.getElementById('readWowClassicList');
+  } else if (source === 'formula1') {
+    target = document.getElementById('readFormula1List');
+  } else if (source === 'bbc') {
+    target = document.getElementById('readBbcList');
+  }
   if (!target) return;
   const el = target.querySelector(`li[data-id="${CSS.escape(id)}"]`);
   if (el) el.remove();
